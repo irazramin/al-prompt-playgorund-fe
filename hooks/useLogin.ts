@@ -11,7 +11,7 @@ export const useLogin = () => {
     mutationFn: (data: LoginSchema) => login(data),
     onSuccess: () => {
       toast.success("Logged in successfully");
-      router.push("/dashboard"); // Adjust redirection as needed
+      router.push("/chat");
     },
     onError: (error: any) => {
       toast.error(error.response?.data?.message || "Failed to login");
