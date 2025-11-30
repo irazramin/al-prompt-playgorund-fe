@@ -33,6 +33,7 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar'
 import { useGetProfile } from "@/hooks/useGetProfile"
+import { useLogout } from "@/hooks/useLogout"
 
 export function NavUser({
   user,
@@ -45,6 +46,8 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
   const { data: profile } = useGetProfile();
+  const { mutate: handleLogout, isPending: isLoggingOut } = useLogout()
+
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -66,7 +69,7 @@ export function NavUser({
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
@@ -91,7 +94,7 @@ export function NavUser({
                   Profile
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link href="/password" className="flex items-center gap-2">
                   <Lock />
                   Password
@@ -99,9 +102,9 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleLogout()} disabled={isLoggingOut}>
               <LogOut />
-              Log out
+              {isLoggingOut ? "Logging out..." : "Log out"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

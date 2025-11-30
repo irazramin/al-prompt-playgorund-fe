@@ -1,11 +1,8 @@
-"use client"
 import { useState, useEffect, useRef, KeyboardEvent } from "react"
 import { useAI } from "@/components/context/ai-context"
 import { SendHorizontal, Sparkles, Loader2 } from "lucide-react"
-import { toast } from "sonner"
-import { enhancePrompt } from "@/services/ai.server"
 import { models } from "@/constants/ai-models"
-
+import { useEnhancePrompt } from "@/hooks/useEnhancePrompt"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { ModelSelector } from "@/components/chat/model-selector"
@@ -22,40 +19,33 @@ interface ChatInputProps {
 
 export function ChatInput({ onSend }: ChatInputProps) {
     const [input, setInput] = useState("")
-    const [isEnhancing, setIsEnhancing] = useState(false)
     const { model, setModel, temperature, setTemperature } = useAI()
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+    const { mutate: enhance, isPending: isEnhancing, data: enhanceData } = useEnhancePrompt()
+
+    useEffect(() => {
+        if (enhanceData?.data?.enhancedPrompt) {
+            setInput(enhanceData.data.enhancedPrompt)
+        }
+    }, [enhanceData])
 
     const handleEnhance = async () => {
         if (!input.trim()) return
 
-        setIsEnhancing(true)
-        try {
-            const selectedModel = models.find(m => m.value === model)
-            const provider = selectedModel?.type || "openai"
+        const selectedModel = models.find(m => m.value === model)
+        const provider = selectedModel?.type || "openai"
 
-            const response = await enhancePrompt({
-                prompt: input,
-                provider,
-                aiModel: model,
-                temperature
-            })
-            console.log("Enhance Response:", response)
-            if (response?.data?.enhancedPrompt) {
-                setInput(response.data.enhancedPrompt)
-                toast.success("Prompt enhanced!")
-            }
-        } catch (error) {
-            toast.error("Failed to enhance prompt")
-            console.error(error)
-        } finally {
-            setIsEnhancing(false)
-        }
+        enhance({
+            prompt: input,
+            provider,
+            aiModel: model,
+            temperature
+        })
     }
 
     useEffect(() => {
         if (textareaRef.current) {
-            textareaRef.current.style.height = "auto" // Reset height
+            textareaRef.current.style.height = "auto"
             const scrollHeight = textareaRef.current.scrollHeight
             textareaRef.current.style.height = `${Math.min(scrollHeight, 200)}px`
         }

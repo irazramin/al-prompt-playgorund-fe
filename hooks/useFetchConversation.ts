@@ -5,8 +5,9 @@ export const useFetchConversation = (chatId: string | undefined) => {
     return useQuery({
         queryKey: ["conversation", chatId],
         queryFn: () => fetchConversation(chatId!),
-        enabled: !!chatId, // Only fetch if chatId exists
-        staleTime: 0, // Always fetch fresh data
+        enabled: !!chatId,
+        staleTime: 0,
+        refetchOnMount: true,
         refetchOnWindowFocus: false,
     });
 };

@@ -20,7 +20,6 @@ import { Button } from "@/components/ui/button"
 import { GalleryVerticalEnd } from "lucide-react"
 import Link from "next/link"
 
-// This is sample data.
 const data = {
   user: {
     name: "shadcn",
@@ -39,17 +38,17 @@ const data = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader className="p-2 space-y-2">
+      <SidebarHeader className="p-2 space-y-0">
         <TeamSwitcher teams={data.teams} />
         <SidebarMenu>
           <SidebarMenuItem>
             <Button className="w-full justify-start gap-2 rounded-full pl-2" variant="ghost">
-              <Link href="/chat">
+              <Link href="/chat" className="flex items-center gap-2">
                 <div className="flex items-center justify-center h-6 w-6 rounded-full bg-primary text-white">
                   <Plus className="h-4 w-4" />
                 </div>
+                <span className="group-data-[collapsible=icon]:hidden font-medium">New chat</span>
               </Link>
-              <span className="group-data-[collapsible=icon]:hidden font-medium">New chat</span>
             </Button>
           </SidebarMenuItem>
         </SidebarMenu>

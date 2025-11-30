@@ -39,9 +39,9 @@ import { Chat } from "@/types/ai.types"
 import { Skeleton } from "@/components/ui/skeleton"
 import { updateConversationTitle } from "@/services/ai.server"
 import { toast } from "sonner"
-import { useQueryClient } from "@tanstack/react-query"
 import { useDeleteConversation } from "@/hooks/useDeleteConversation"
 import { useRouter } from "next/navigation"
+import { queryClient } from "@/lib/react-query"
 
 export function NavHistory() {
     const { isMobile } = useSidebar()
@@ -53,8 +53,6 @@ export function NavHistory() {
     const [editingId, setEditingId] = React.useState<string | null>(null)
     const [deleteId, setDeleteId] = React.useState<string | null>(null)
     const [editName, setEditName] = React.useState("")
-
-    const queryClient = useQueryClient()
 
     const handleRenameStart = (chat: Chat) => {
         setEditingId(chat._id)
@@ -91,10 +89,10 @@ export function NavHistory() {
     return (
         <>
             <SidebarGroup className="group-data-[collapsible=icon]:hidden py-0">
-                <SidebarGroupLabel className="px-3 text-xs font-medium text-muted-foreground/70 uppercase tracking-wider mt-4 mb-2">
+                <SidebarGroupLabel className="px-3 text-xs font-medium text-muted-foreground/70 uppercase tracking-wider mt-1">
                     Recents
                 </SidebarGroupLabel>
-                <SidebarMenu>
+                <SidebarMenu className="gap-0">
                     {isLoading ? (
                         Array.from({ length: 5 }).map((_, i) => (
                             <div key={i} className="px-2 py-1">
@@ -171,7 +169,7 @@ export function NavHistory() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        <AlertDialogAction onClick={handleDelete} className="bg-destructive text-white hover:bg-destructive/90">
                             Delete
                         </AlertDialogAction>
                     </AlertDialogFooter>

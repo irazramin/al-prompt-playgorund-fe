@@ -22,9 +22,6 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response: AxiosResponse) => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`✅ API Response: ${response.status} ${response.config.url}`)
-    }
     return response
   },
   (error: AxiosError) => {
@@ -33,10 +30,8 @@ api.interceptors.response.use(
 
       switch (status) {
         case 400:
-          console.log('❌ Bad Request: Invalid request')
           break;
         case 401:
-          // clearToken()
           if (typeof window !== 'undefined' && !window.location.pathname.includes('/login')) {
             window.location.href = '/login'
           }

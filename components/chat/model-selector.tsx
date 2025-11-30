@@ -39,7 +39,7 @@ export function ModelSelector({ model, setModel, temperature, setTemperature }: 
 
             <Popover>
                 <PopoverTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 gap-2 text-muted-foreground hover:text-foreground px-2">
+                    <Button variant="ghost" size="sm" className="h-8 gap-1 text-muted-foreground hover:text-foreground px-2">
                         <Thermometer className="h-4 w-4" />
                         <span className="text-xs font-medium">{temperature}</span>
                     </Button>
@@ -48,7 +48,7 @@ export function ModelSelector({ model, setModel, temperature, setTemperature }: 
                     <div className="grid gap-4">
                         <div className="flex items-center justify-between">
                             <Label htmlFor="temperature">Temperature</Label>
-                            <span className="w-12 rounded-md border border-transparent px-1 py-0.5 text-right text-sm text-muted-foreground hover:border-border">
+                            <span className="w-12 rounded-md border border-transparent py-0.5 text-right text-sm text-muted-foreground hover:border-border">
                                 {temperature}
                             </span>
                         </div>

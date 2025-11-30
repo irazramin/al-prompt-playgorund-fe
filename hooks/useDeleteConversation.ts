@@ -1,10 +1,9 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { useMutation } from "@tanstack/react-query"
 import { deleteConversation } from "@/services/ai.server"
 import { toast } from "sonner"
+import { queryClient } from "@/lib/react-query"
 
 export const useDeleteConversation = () => {
-    const queryClient = useQueryClient()
-
     return useMutation({
         mutationFn: (chatId: string) => deleteConversation(chatId),
         onSuccess: () => {
