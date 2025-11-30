@@ -11,6 +11,8 @@ import crypto from 'crypto'
 import { aiPayload } from "@/types/ai.types"
 import { models } from "@/constants/ai-models"
 import { CHAT_URL } from "@/constants/api.constants"
+import { useFetchConversation } from "@/hooks/useFetchConversation"
+import { useQueryClient } from "@tanstack/react-query"
 
 interface Message {
     role: "user" | "assistant"
@@ -24,10 +26,32 @@ interface ChatInterfaceProps {
 export function ChatInterface({ id }: ChatInterfaceProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
+    const queryClient = useQueryClient()
     const [messages, setMessages] = useState<Message[]>([])
     const [isLoading, setIsLoading] = useState(false)
     const initialized = useRef(false)
+    const conversationLoaded = useRef(false)
     const { model, temperature } = useAI()
+    const { data: conversationData, isLoading: isLoadingConversation } = useFetchConversation(id)
+
+    // Reset and load conversation when chatId changes
+    useEffect(() => {
+        // Reset state
+        setMessages([])
+        initialized.current = false
+        conversationLoaded.current = false
+
+        // Load conversation if data exists
+        if (conversationData?.data && Array.isArray(conversationData.data)) {
+            const loadedMessages: Message[] = []
+            conversationData.data.forEach((msg: any) => {
+                loadedMessages.push({ role: "user", content: msg.prompt })
+                loadedMessages.push({ role: "assistant", content: msg.reply })
+            })
+            setMessages(loadedMessages)
+            conversationLoaded.current = true
+        }
+    }, [id, conversationData])
 
     // Handle initial message from URL
     useEffect(() => {
@@ -119,6 +143,8 @@ export function ChatInterface({ id }: ChatInterfaceProps) {
                             })
                         } else if (event === 'complete') {
                             setIsLoading(false)
+                            // Invalidate chats query to update sidebar history
+                            queryClient.invalidateQueries({ queryKey: ['chats'] })
                         }
                     }
                 }
@@ -180,7 +206,7 @@ export function ChatInterface({ id }: ChatInterfaceProps) {
                     )}
                 </div>
             </ScrollArea>
-            <div className="w-full p-4 bg-background z-10">
+            <div className="w-full z-10">
                 <div className="max-w-3xl mx-auto">
                     <ChatInput onSend={handleSend} />
                     <div className="text-center mt-2">

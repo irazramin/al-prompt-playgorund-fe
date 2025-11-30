@@ -1,7 +1,10 @@
 "use client"
 import { useState, useEffect, useRef, KeyboardEvent } from "react"
 import { useAI } from "@/components/context/ai-context"
-import { SendHorizontal, Paperclip, Mic, Plus, Settings2, History } from "lucide-react"
+import { SendHorizontal, Sparkles, Loader2 } from "lucide-react"
+import { toast } from "sonner"
+import { enhancePrompt } from "@/services/ai.server"
+import { models } from "@/constants/ai-models"
 
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -19,8 +22,36 @@ interface ChatInputProps {
 
 export function ChatInput({ onSend }: ChatInputProps) {
     const [input, setInput] = useState("")
+    const [isEnhancing, setIsEnhancing] = useState(false)
     const { model, setModel, temperature, setTemperature } = useAI()
     const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const handleEnhance = async () => {
+        if (!input.trim()) return
+
+        setIsEnhancing(true)
+        try {
+            const selectedModel = models.find(m => m.value === model)
+            const provider = selectedModel?.type || "openai"
+
+            const response = await enhancePrompt({
+                prompt: input,
+                provider,
+                aiModel: model,
+                temperature
+            })
+            console.log("Enhance Response:", response)
+            if (response?.data?.enhancedPrompt) {
+                setInput(response.data.enhancedPrompt)
+                toast.success("Prompt enhanced!")
+            }
+        } catch (error) {
+            toast.error("Failed to enhance prompt")
+            console.error(error)
+        } finally {
+            setIsEnhancing(false)
+        }
+    }
 
     useEffect(() => {
         if (textareaRef.current) {
@@ -44,7 +75,7 @@ export function ChatInput({ onSend }: ChatInputProps) {
     }
 
     return (
-        <div className="relative flex flex-col w-full max-w-2xl mx-auto border rounded-2xl bg-muted/40 focus-within:bg-background  transition-colors">
+        <div className="relative flex flex-col w-full max-w-3xl mx-auto border rounded-2xl bg-muted/40 focus-within:bg-background  transition-colors">
             <Textarea
                 ref={textareaRef}
                 placeholder="How can I help you today?"
@@ -59,11 +90,21 @@ export function ChatInput({ onSend }: ChatInputProps) {
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted">
-                                    <Plus className="h-5 w-5" />
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 rounded-lg text-muted-foreground hover:bg-muted"
+                                    onClick={handleEnhance}
+                                    disabled={isEnhancing || !input.trim()}
+                                >
+                                    {isEnhancing ? (
+                                        <Loader2 className="h-5 w-5 animate-spin" />
+                                    ) : (
+                                        <Sparkles className="h-5 w-5" />
+                                    )}
                                 </Button>
                             </TooltipTrigger>
-                            <TooltipContent>Add Attachment</TooltipContent>
+                            <TooltipContent>Enhance Prompt</TooltipContent>
                         </Tooltip>
                     </TooltipProvider>
                 </div>

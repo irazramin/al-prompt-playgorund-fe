@@ -72,7 +72,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavHistory initialChats={data.history} />
+        <NavHistory />
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={data.user} />

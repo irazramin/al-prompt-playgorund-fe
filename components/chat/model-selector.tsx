@@ -39,8 +39,9 @@ export function ModelSelector({ model, setModel, temperature, setTemperature }: 
 
             <Popover>
                 <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                    <Button variant="ghost" size="sm" className="h-8 gap-2 text-muted-foreground hover:text-foreground px-2">
                         <Thermometer className="h-4 w-4" />
+                        <span className="text-xs font-medium">{temperature}</span>
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80" align="start">

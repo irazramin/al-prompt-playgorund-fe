@@ -1,6 +1,5 @@
-"use client"
-
 import * as React from "react"
+import Link from "next/link"
 import {
     MoreHorizontal,
     Trash2,
@@ -35,41 +34,34 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Input } from "@/components/ui/input"
+import { useFetchChats } from "@/hooks/useFetchChats"
+import { Chat } from "@/types/ai.types"
+import { Skeleton } from "@/components/ui/skeleton"
 
-interface Chat {
-    id: string
-    name: string
-    url: string
-}
-
-export function NavHistory({
-    initialChats,
-}: {
-    initialChats: Chat[]
-}) {
+export function NavHistory() {
     const { isMobile } = useSidebar()
-    const [chats, setChats] = React.useState(initialChats)
+    const { data: response, isLoading } = useFetchChats()
+
+    // Extract conversations from API response
+    const chats = response?.data?.conversations || []
+
     const [editingId, setEditingId] = React.useState<string | null>(null)
     const [deleteId, setDeleteId] = React.useState<string | null>(null)
     const [editName, setEditName] = React.useState("")
 
     const handleRenameStart = (chat: Chat) => {
-        setEditingId(chat.id)
-        setEditName(chat.name)
+        setEditingId(chat._id)
+        setEditName(chat.title)
     }
 
     const handleRenameSave = () => {
-        if (editingId) {
-            setChats(chats.map(c => c.id === editingId ? { ...c, name: editName } : c))
-            setEditingId(null)
-        }
+        // TODO: Implement API call to rename chat
+        setEditingId(null)
     }
 
     const handleDelete = () => {
-        if (deleteId) {
-            setChats(chats.filter(c => c.id !== deleteId))
-            setDeleteId(null)
-        }
+        // TODO: Implement API call to delete chat
+        setDeleteId(null)
     }
 
     return (
@@ -79,56 +71,69 @@ export function NavHistory({
                     Recents
                 </SidebarGroupLabel>
                 <SidebarMenu>
-                    {chats.map((item) => (
-                        <SidebarMenuItem key={item.id} className="group/item">
-                            {editingId === item.id ? (
-                                <div className="flex items-center px-2 py-1">
-                                    <Input
-                                        value={editName}
-                                        onChange={(e) => setEditName(e.target.value)}
-                                        onBlur={handleRenameSave}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') handleRenameSave()
-                                        }}
-                                        autoFocus
-                                        className="h-8 text-sm"
-                                    />
+                    {isLoading ? (
+                        Array.from({ length: 5 }).map((_, i) => (
+                            <div key={i} className="px-2 py-1">
+                                <div className="h-9 rounded-lg px-3 flex items-center gap-3">
+                                    <Skeleton className="h-4 w-4 rounded-sm" />
+                                    <Skeleton className="h-4 w-24 rounded-sm" />
                                 </div>
-                            ) : (
-                                <>
-                                    <SidebarMenuButton asChild className="h-9 rounded-lg px-3 hover:bg-sidebar-accent/50 transition-all duration-200">
-                                        <a href={item.url} className="flex items-center gap-3">
-                                            <MessageSquare className="h-4 w-4 text-muted-foreground/50 group-hover/item:text-primary/70 transition-colors" />
-                                            <span className="truncate text-sm text-muted-foreground group-hover/item:text-foreground transition-colors">{item.name}</span>
-                                        </a>
-                                    </SidebarMenuButton>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <SidebarMenuAction showOnHover className="opacity-0 group-hover/item:opacity-100 transition-opacity duration-200">
-                                                <MoreHorizontal className="h-4 w-4" />
-                                                <span className="sr-only">More</span>
-                                            </SidebarMenuAction>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent
-                                            className="w-48 rounded-lg shadow-lg border-border/50"
-                                            side={isMobile ? "bottom" : "right"}
-                                            align={isMobile ? "end" : "start"}
-                                        >
-                                            <DropdownMenuItem onClick={() => handleRenameStart(item)} className="cursor-pointer">
-                                                <Pencil className="text-muted-foreground h-4 w-4 mr-2" />
-                                                <span>Rename</span>
-                                            </DropdownMenuItem>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuItem onClick={() => setDeleteId(item.id)} className="cursor-pointer text-destructive focus:text-destructive">
-                                                <Trash2 className="h-4 w-4 mr-2" />
-                                                <span>Delete</span>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </>
-                            )}
-                        </SidebarMenuItem>
-                    ))}
+                            </div>
+                        ))
+                    ) : chats.length === 0 ? (
+                        <div className="px-3 py-2 text-xs text-muted-foreground">No chats yet</div>
+                    ) : (
+                        chats.map((item: Chat) => (
+                            <SidebarMenuItem key={item._id} className="group/item">
+                                {editingId === item._id ? (
+                                    <div className="flex items-center px-2 py-1">
+                                        <Input
+                                            value={editName}
+                                            onChange={(e) => setEditName(e.target.value)}
+                                            onBlur={handleRenameSave}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') handleRenameSave()
+                                            }}
+                                            autoFocus
+                                            className="h-8 text-sm"
+                                        />
+                                    </div>
+                                ) : (
+                                    <>
+                                        <SidebarMenuButton asChild className="h-9 rounded-lg px-3 hover:bg-sidebar-accent/50 transition-all duration-200">
+                                            <Link href={`/chat/${item.chatId}`} className="flex items-center gap-3">
+                                                <MessageSquare className="h-4 w-4 text-muted-foreground/50 group-hover/item:text-primary/70 transition-colors" />
+                                                <span className="truncate text-sm text-muted-foreground group-hover/item:text-foreground transition-colors">{item.title}</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <SidebarMenuAction showOnHover className="opacity-0 group-hover/item:opacity-100 transition-opacity duration-200">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                    <span className="sr-only">More</span>
+                                                </SidebarMenuAction>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent
+                                                className="w-48 rounded-lg shadow-lg border-border/50"
+                                                side={isMobile ? "bottom" : "right"}
+                                                align={isMobile ? "end" : "start"}
+                                            >
+                                                <DropdownMenuItem onClick={() => handleRenameStart(item)} className="cursor-pointer">
+                                                    <Pencil className="text-muted-foreground h-4 w-4 mr-2" />
+                                                    <span>Rename</span>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem onClick={() => setDeleteId(item._id)} className="cursor-pointer text-destructive focus:text-destructive">
+                                                    <Trash2 className="h-4 w-4 mr-2" />
+                                                    <span>Delete</span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </>
+                                )}
+                            </SidebarMenuItem>
+                        )))
+                    }
                 </SidebarMenu>
             </SidebarGroup>
 

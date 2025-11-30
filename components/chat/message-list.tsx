@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { Check, Copy, RefreshCw, ThumbsDown, ThumbsUp } from "lucide-react"
 import ReactMarkdown from "react-markdown"
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism'
 
 interface Message {
     role: "user" | "assistant"
@@ -68,8 +70,6 @@ function MessageActions({ content }: { content: string }) {
 
 export function MessageList({ messages }: MessageListProps) {
     const bottomRef = React.useRef<HTMLDivElement>(null)
-
-    // Scroll to bottom when messages change
     React.useEffect(() => {
         bottomRef.current?.scrollIntoView({ behavior: "smooth" })
     }, [messages])
@@ -82,16 +82,17 @@ export function MessageList({ messages }: MessageListProps) {
                 <div
                     key={index}
                     className={cn(
-                        "flex gap-3 w-full animate-in fade-in-0 slide-in-from-bottom-4 duration-500",
-                        "justify-start"
+                        "flex gap-3 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 ",
+                        message.role === "user" ? "flex-row-reverse" : ""
                     )}
                 >
                     {/* Avatar */}
                     {message.role === "assistant" ? (
-                        <Avatar className="h-8 w-8 border-2 border-border/50 shadow-sm">
-                            <AvatarImage src="/ai-avatar.png" />
-                            <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">AI</AvatarFallback>
-                        </Avatar>
+                        // <Avatar className="h-8 w-8 border-2 border-border/50 shadow-sm">
+                        //     <AvatarImage src="/ai-avatar.png" />
+                        //     <AvatarFallback className="bg-primary/10 text-primary font-semibold text-xs">AI</AvatarFallback>
+                        // </Avatar>
+                        <></>
                     ) : (
                         <Avatar className="h-8 w-8 border-2 border-primary/20 shadow-sm">
                             <AvatarImage src="/user-avatar.png" />
@@ -99,18 +100,58 @@ export function MessageList({ messages }: MessageListProps) {
                         </Avatar>
                     )}
 
-                    <div className="flex flex-col max-w-[75%]">
-                        {/* Message bubble */}
+                    <div className={cn(
+                        "flex flex-col",
+                        message.role === "user" ? "items-end" : "items-start"
+                    )}>
                         <div
                             className={cn(
-                                "rounded-2xl p-2 break-words",
+                                "rounded-xl py-2 px-3 break-words",
                                 message.role === "user"
                                     ? "bg-neutral-200 text-black"
-                                    : "bg-transparent text-foreground p-0"
+                                    : "bg-transparent text-foreground p-0 w-full"
                             )}
                         >
-                            <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                                <ReactMarkdown>{message.content}</ReactMarkdown>
+                            <div className="text-sm leading-relaxed inline-block">
+                                <ReactMarkdown
+                                    components={{
+                                        code({ node, inline, className, children, ...props }: any) {
+                                            const match = /language-(\w+)/.exec(className || '')
+                                            return !inline && match ? (
+                                                <div className="relative rounded-md overflow-hidden my-2">
+                                                    <div className="absolute right-2 top-2 z-10">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-6 w-6 text-white hover:text-white bg-gray-500 backdrop-blur-sm hover:bg-gray-900 cursor-pointer"
+                                                            onClick={() => {
+                                                                navigator.clipboard.writeText(String(children).replace(/\n$/, ''))
+                                                            }}
+                                                        >
+                                                            <Copy className="h-3 w-3" />
+                                                            <span className="sr-only">Copy code</span>
+                                                        </Button>
+                                                    </div>
+                                                    <SyntaxHighlighter
+                                                        {...props}
+                                                        style={vscDarkPlus}
+                                                        language={match[1]}
+                                                        PreTag="div"
+                                                        customStyle={{ margin: 0, borderRadius: '0.5rem' }}
+                                                    >
+                                                        {String(children).replace(/\n$/, '')}
+                                                    </SyntaxHighlighter>
+                                                </div>
+                                            ) : (
+                                                <code {...props} className={cn("bg-muted px-1 py-0.5 rounded-md font-mono text-sm", className)}>
+                                                    {children}
+                                                </code>
+                                            )
+                                        }
+                                    }}
+                                >
+                                    {message.content}
+                                </ReactMarkdown>
                             </div>
                         </div>
 

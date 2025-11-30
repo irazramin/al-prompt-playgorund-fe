@@ -6,3 +6,14 @@ export interface aiPayload {
     provider: string;
     userId: string;
 }
+
+export interface Chat {
+    _id: string;
+    chatId: string;
+    userId: string;
+    title: string;
+    lastMessageAt: string;
+    createdAt: string;
+    updatedAt: string;
+    __v: number;
+}
