@@ -29,28 +29,11 @@ const data = {
   },
   teams: [
     {
-      name: "Acme Inc",
+      name: "AI Prompt Playground",
       logo: GalleryVerticalEnd,
-      plan: "Enterprise",
+      plan: "Explore",
     }
-  ],
-  history: [
-    {
-      id: "1",
-      name: "Previous Chat 1",
-      url: "#",
-    },
-    {
-      id: "2",
-      name: "React Component Help",
-      url: "#",
-    },
-    {
-      id: "3",
-      name: "Debug Python Script",
-      url: "#",
-    },
-  ],
+  ]
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {

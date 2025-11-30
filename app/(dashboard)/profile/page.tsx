@@ -19,7 +19,7 @@ export default function ProfilePage() {
               <span className="text-sm">Profile settings</span>
             </div>
             <ProfileForm />
-            <DeleteAccountSection />
+            {/* <DeleteAccountSection /> */}
           </div>
         </main>
       </div>

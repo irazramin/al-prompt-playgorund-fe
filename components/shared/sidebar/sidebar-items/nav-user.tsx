@@ -6,8 +6,10 @@ import {
   Bell,
   ChevronsUpDown,
   CreditCard,
+  Lock,
   LogOut,
   Sparkles,
+  User2,
 } from "lucide-react"
 
 import {
@@ -30,6 +32,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar'
+import { useGetProfile } from "@/hooks/useGetProfile"
 
 export function NavUser({
   user,
@@ -41,7 +44,7 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
-
+  const { data: profile } = useGetProfile();
   return (
     <SidebarMenu>
       <SidebarMenuItem>
@@ -52,12 +55,12 @@ export function NavUser({
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
               <Avatar className="h-8 w-8 rounded-lg">
-                <AvatarImage src={user.avatar} alt={user.name} />
+                <AvatarImage src={user.avatar} alt={profile?.data?.name} />
                 <AvatarFallback className="rounded-lg">CN</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{user.name}</span>
-                <span className="truncate text-xs">{user.email}</span>
+                <span className="truncate font-medium">{profile?.data?.name}</span>
+                <span className="truncate text-xs">{profile?.data?.email}</span>
               </div>
               <ChevronsUpDown className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -75,8 +78,8 @@ export function NavUser({
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">{user.name}</span>
-                  <span className="truncate text-xs">{user.email}</span>
+                  <span className="truncate font-medium">{profile?.data?.name}</span>
+                  <span className="truncate text-xs">{profile?.data?.email}</span>
                 </div>
               </div>
             </DropdownMenuLabel>
@@ -84,13 +87,15 @@ export function NavUser({
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
                 <Link href="/profile">
-                  <BadgeCheck />
+                  <User2 />
                   Profile
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <CreditCard />
-                Account
+                <Link href="/password" className="flex items-center gap-2">
+                  <Lock />
+                  Password
+                </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

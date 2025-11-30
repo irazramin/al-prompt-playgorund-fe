@@ -37,30 +37,54 @@ import { Input } from "@/components/ui/input"
 import { useFetchChats } from "@/hooks/useFetchChats"
 import { Chat } from "@/types/ai.types"
 import { Skeleton } from "@/components/ui/skeleton"
+import { updateConversationTitle } from "@/services/ai.server"
+import { toast } from "sonner"
+import { useQueryClient } from "@tanstack/react-query"
+import { useDeleteConversation } from "@/hooks/useDeleteConversation"
+import { useRouter } from "next/navigation"
 
 export function NavHistory() {
     const { isMobile } = useSidebar()
     const { data: response, isLoading } = useFetchChats()
+    const router = useRouter()
 
-    // Extract conversations from API response
     const chats = response?.data?.conversations || []
 
     const [editingId, setEditingId] = React.useState<string | null>(null)
     const [deleteId, setDeleteId] = React.useState<string | null>(null)
     const [editName, setEditName] = React.useState("")
 
+    const queryClient = useQueryClient()
+
     const handleRenameStart = (chat: Chat) => {
         setEditingId(chat._id)
         setEditName(chat.title)
     }
 
-    const handleRenameSave = () => {
-        // TODO: Implement API call to rename chat
-        setEditingId(null)
+    const handleRenameSave = async () => {
+        if (!editingId || !editName.trim()) {
+            setEditingId(null)
+            return
+        }
+
+        try {
+            await updateConversationTitle(editingId, editName)
+            toast.success("Chat renamed")
+            queryClient.invalidateQueries({ queryKey: ["chats"] });
+            router.push(`/chat`);
+        } catch (error) {
+            toast.error("Failed to rename chat")
+            console.error(error)
+        } finally {
+            setEditingId(null)
+        }
     }
 
+    const { mutate: deleteChat } = useDeleteConversation()
+
     const handleDelete = () => {
-        // TODO: Implement API call to delete chat
+        if (!deleteId) return
+        deleteChat(deleteId)
         setDeleteId(null)
     }
 
