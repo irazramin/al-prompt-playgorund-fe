@@ -16,25 +16,7 @@ import {
 } from "@/components/ui/popover"
 import { Label } from "@/components/ui/label"
 import { Slider } from "@/components/ui/slider"
-
-const models = [
-    {
-        value: "gpt-4",
-        label: "GPT-4",
-    },
-    {
-        value: "gpt-3.5-turbo",
-        label: "GPT-3.5 Turbo",
-    },
-    {
-        value: "claude-3-opus",
-        label: "Claude 3 Opus",
-    },
-    {
-        value: "claude-3-sonnet",
-        label: "Claude 3 Sonnet",
-    },
-]
+import { models } from "@/constants/ai-models"
 
 interface ModelSelectorProps {
     model: string
@@ -44,6 +26,14 @@ interface ModelSelectorProps {
 }
 
 export function ModelSelector({ model, setModel, temperature, setTemperature }: ModelSelectorProps) {
+    const groupedModels = models.reduce((acc, model) => {
+        if (!acc[model.type]) {
+            acc[model.type] = []
+        }
+        acc[model.type].push(model)
+        return acc
+    }, {} as Record<string, typeof models>)
+
     return (
         <div className="flex items-center gap-0">
 
@@ -88,20 +78,27 @@ export function ModelSelector({ model, setModel, temperature, setTemperature }: 
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-[200px]" align="end">
-                    {models.map((framework) => (
-                        <DropdownMenuItem
-                            key={framework.value}
-                            onClick={() => setModel(framework.value)}
-                            className="justify-between cursor-pointer"
-                        >
-                            {framework.label}
-                            <Check
-                                className={cn(
-                                    "ml-2 h-4 w-4",
-                                    model === framework.value ? "opacity-100" : "opacity-0"
-                                )}
-                            />
-                        </DropdownMenuItem>
+                    {Object.entries(groupedModels).map(([type, typeModels]) => (
+                        <React.Fragment key={type}>
+                            <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase">
+                                {type}
+                            </div>
+                            {typeModels.map((framework) => (
+                                <DropdownMenuItem
+                                    key={framework.value}
+                                    onClick={() => setModel(framework.value)}
+                                    className="justify-between cursor-pointer"
+                                >
+                                    {framework.label}
+                                    <Check
+                                        className={cn(
+                                            "ml-2 h-4 w-4",
+                                            model === framework.value ? "opacity-100" : "opacity-0"
+                                        )}
+                                    />
+                                </DropdownMenuItem>
+                            ))}
+                        </React.Fragment>
                     ))}
                 </DropdownMenuContent>
             </DropdownMenu>

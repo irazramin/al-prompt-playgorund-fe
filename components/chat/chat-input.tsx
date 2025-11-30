@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect, useRef, KeyboardEvent } from "react"
+import { useAI } from "@/components/context/ai-context"
 import { SendHorizontal, Paperclip, Mic, Plus, Settings2, History } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -18,21 +19,8 @@ interface ChatInputProps {
 
 export function ChatInput({ onSend }: ChatInputProps) {
     const [input, setInput] = useState("")
-    const [model, setModel] = useState("gpt-4")
-    const [temperature, setTemperature] = useState(0.7)
-
+    const { model, setModel, temperature, setTemperature } = useAI()
     const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-    useEffect(() => {
-        const model = localStorage.getItem("model");
-        const temperature = localStorage.getItem("temperature");
-        if (model) {
-            setModel(model)
-        }
-        if (temperature) {
-            setTemperature(parseFloat(temperature))
-        }
-    }, []);
 
     useEffect(() => {
         if (textareaRef.current) {
@@ -52,20 +40,6 @@ export function ChatInput({ onSend }: ChatInputProps) {
                     textareaRef.current.style.height = "60px"
                 }
             }
-        }
-    }
-
-    const handleModelChange = (model: string) => {
-        if (model) {
-            setModel(model)
-            localStorage.setItem("model", model)
-        }
-    }
-
-    const handleTemperatureChange = (temperature: number) => {
-        if (temperature) {
-            setTemperature(temperature)
-            localStorage.setItem("temperature", temperature.toString())
         }
     }
 
@@ -96,9 +70,9 @@ export function ChatInput({ onSend }: ChatInputProps) {
                 <div className="flex items-center gap-2">
                     <ModelSelector
                         model={model}
-                        setModel={handleModelChange}
+                        setModel={setModel}
                         temperature={temperature}
-                        setTemperature={handleTemperatureChange}
+                        setTemperature={setTemperature}
                     />
                     <Button
                         size="icon"

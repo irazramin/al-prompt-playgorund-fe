@@ -9,8 +9,13 @@ export const useLogin = () => {
 
   return useMutation({
     mutationFn: (data: LoginSchema) => login(data),
-    onSuccess: () => {
+    onSuccess: (
+      data: any
+    ) => {
       toast.success("Logged in successfully");
+      if (data.data.user) {
+        localStorage.setItem("user", JSON.stringify(data.data.user))
+      }
       router.push("/chat");
     },
     onError: (error: any) => {

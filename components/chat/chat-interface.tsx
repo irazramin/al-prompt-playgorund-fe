@@ -1,11 +1,16 @@
 "use client"
 
-import * as React from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { ChatInput } from "@/components/chat/chat-input"
 import { MessageList } from "@/components/chat/message-list"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useAI } from "@/components/context/ai-context"
+import crypto from 'crypto'
+import { aiPayload } from "@/types/ai.types"
+import { models } from "@/constants/ai-models"
+import { CHAT_URL } from "@/constants/api.constants"
 
 interface Message {
     role: "user" | "assistant"
@@ -19,58 +24,117 @@ interface ChatInterfaceProps {
 export function ChatInterface({ id }: ChatInterfaceProps) {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const [messages, setMessages] = React.useState<Message[]>([])
-    const [isLoading, setIsLoading] = React.useState(false)
-    const initialized = React.useRef(false)
+    const [messages, setMessages] = useState<Message[]>([])
+    const [isLoading, setIsLoading] = useState(false)
+    const initialized = useRef(false)
+    const { model, temperature } = useAI()
 
     // Handle initial message from URL
-    React.useEffect(() => {
+    useEffect(() => {
         if (!initialized.current && id) {
             const q = searchParams.get("q")
             if (q) {
                 initialized.current = true
-                // Add initial message immediately
-                const userMessage: Message = { role: "user", content: q }
-                setMessages([userMessage])
-                setIsLoading(true)
-
-                // Simulate AI response
-                setTimeout(() => {
-                    const aiMessage: Message = {
-                        role: "assistant",
-                        content: "This is a simulated AI response. I am currently a frontend demo, but I can be connected to a real backend API to provide actual answers."
-                    }
-                    setMessages((prev) => [...prev, aiMessage])
-                    setIsLoading(false)
-
-                    // Clean up URL without reload
-                    window.history.replaceState(null, "", `/chat/${id}`)
-                }, 1000)
+                handleSend(q)
             }
         }
     }, [id, searchParams])
 
     const handleSend = async (content: string) => {
-        if (!id) {
-            // Generate random ID and redirect
-            const newId = Math.random().toString(36).substring(7)
-            router.push(`/chat/${newId}?q=${encodeURIComponent(content)}`)
+        let chatId = id;
+        if (!chatId) {
+            chatId = crypto.randomBytes(16).toString('hex');
+            router.push(`/chat/${chatId}?q=${encodeURIComponent(content)}`)
             return
+        }
+
+        const selectedModel = models.find(m => m.value === model)
+        const provider = selectedModel ? selectedModel.type : "openai"
+        const userId = JSON.parse(localStorage.getItem("user") || "{}")?._id
+
+        const payload: aiPayload = {
+            chatId: chatId,
+            prompt: content,
+            aiModel: model,
+            temperature: temperature,
+            provider: provider,
+            userId: userId
         }
 
         const userMessage: Message = { role: "user", content }
         setMessages((prev) => [...prev, userMessage])
         setIsLoading(true)
 
-        // Simulate AI response
-        setTimeout(() => {
-            const aiMessage: Message = {
-                role: "assistant",
-                content: "This is a simulated AI response. I am currently a frontend demo, but I can be connected to a real backend API to provide actual answers."
+        // Create a placeholder for the assistant's message
+        const assistantMessage: Message = { role: "assistant", content: "" }
+        setMessages((prev) => [...prev, assistantMessage])
+
+        try {
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1'
+            const response = await fetch(`${baseUrl}${CHAT_URL}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            })
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok')
             }
-            setMessages((prev) => [...prev, aiMessage])
+
+            const reader = response.body?.getReader()
+            const decoder = new TextDecoder()
+
+            if (!reader) return
+
+            let buffer = ''
+
+            while (true) {
+                const { done, value } = await reader.read()
+                if (done) break
+
+                const chunk = decoder.decode(value, { stream: true })
+                buffer += chunk
+
+                const lines = buffer.split('\n\n')
+                buffer = lines.pop() || ''
+
+                for (const line of lines) {
+                    const eventMatch = line.match(/^event: (.*)$/m)
+                    const dataMatch = line.match(/^data: (.*)$/m)
+
+                    if (eventMatch && dataMatch) {
+                        const event = eventMatch[1]
+                        const data = JSON.parse(dataMatch[1])
+
+                        if (event === 'chunk') {
+                            setMessages((prev) => {
+                                const newMessages = [...prev]
+                                const lastMessage = newMessages[newMessages.length - 1]
+                                if (lastMessage.role === 'assistant') {
+                                    lastMessage.content += data.content
+                                }
+                                return newMessages
+                            })
+                        } else if (event === 'complete') {
+                            setIsLoading(false)
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error streaming response:', error)
             setIsLoading(false)
-        }, 1000)
+            setMessages((prev) => {
+                const newMessages = [...prev]
+                const lastMessage = newMessages[newMessages.length - 1]
+                if (lastMessage.role === 'assistant' && !lastMessage.content) {
+                    lastMessage.content = "Sorry, something went wrong. Please try again."
+                }
+                return newMessages
+            })
+        }
     }
 
     return (

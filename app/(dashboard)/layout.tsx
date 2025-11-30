@@ -3,12 +3,13 @@
 import type React from "react"
 import { usePathname } from "next/navigation"
 import { DashboardLayout } from "@/components/layout/dashboard-layout"
+import { AIProvider } from "@/components/context/ai-context"
 
 function getBreadcrumbs(pathname: string) {
   if (pathname.startsWith("/settings")) {
     const parts = pathname.split("/").filter(Boolean)
     const items: Array<{ label: string; href?: string }> = [{ label: "Settings", href: "/settings" }]
-    
+
     if (parts.length > 1) {
       const page = parts[1]
       const pageLabels: Record<string, string> = {
@@ -19,10 +20,10 @@ function getBreadcrumbs(pathname: string) {
       }
       items.push({ label: pageLabels[page] || page })
     }
-    
+
     return { items }
   }
-  
+
   if (pathname === "/dashboard") {
     return {
       items: [
@@ -31,7 +32,7 @@ function getBreadcrumbs(pathname: string) {
       ],
     }
   }
-  
+
   return undefined
 }
 
@@ -42,11 +43,13 @@ export default function DashboardGroupLayout({
 }) {
   const pathname = usePathname()
   const breadcrumbs = getBreadcrumbs(pathname)
-  
+
   return (
-    <DashboardLayout breadcrumbs={breadcrumbs}>
-      {children}
-    </DashboardLayout>
+    <AIProvider>
+      <DashboardLayout breadcrumbs={breadcrumbs}>
+        {children}
+      </DashboardLayout>
+    </AIProvider>
   )
 }
 
