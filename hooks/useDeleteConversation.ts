@@ -6,9 +6,9 @@ import { queryClient } from "@/lib/react-query"
 export const useDeleteConversation = () => {
     return useMutation({
         mutationFn: (chatId: string) => deleteConversation(chatId),
-        onSuccess: () => {
+        onSuccess: async () => {
             toast.success("Chat deleted")
-            queryClient.invalidateQueries({ queryKey: ["chats"] })
+            await queryClient.refetchQueries({ queryKey: ["chats"] })
         },
         onError: (error) => {
             toast.error("Failed to delete chat")
